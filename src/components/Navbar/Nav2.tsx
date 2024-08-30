@@ -21,9 +21,7 @@ function Nav2() {
           >
             Home
           </Button>
-          <Text cursor={"pointer"}>Learn</Text>
-          <Text cursor={"pointer"}>Community</Text>
-          <Text cursor={"pointer"}>Support</Text>
+          
         </Flex>
       </Hide>
     </Flex>
