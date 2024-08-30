@@ -28,7 +28,8 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useAppSelector } from "../../redux/hook";
 import { TransactionT } from "../../redux/types";
 import { ChatIcon } from "@chakra-ui/icons";
-	@@ -33,31 +27,23 @@ import SideNav from "../SideNav/HalfSide";
+import { IoIosArrowBack } from "react-icons/io";
+import SideNav from "../SideNav/HalfSide";
 
 function Details() {
   const { id }: any = useParams();
@@ -60,7 +61,9 @@ function Details() {
 
   const handleDonate = async () => {
     await donate(amount);
-	@@ -67,13 +53,13 @@ function Details() {
+  };
+
+  return (
     <SideNav>
       {!publicKey ? (
         <Flex align="center" justify="center" flexDirection="column">
@@ -74,7 +77,8 @@ function Details() {
           {recipient.name.length > 2 ? (
             <>
               <Flex justify="space-evenly">
-	@@ -82,13 +68,13 @@ function Details() {
+                <IoIosArrowBack />
+                <Text>SolFunding for {recipient.name}</Text>
                 <Box />
               </Flex>
 
@@ -88,7 +92,12 @@ function Details() {
                 h={170}
                 bgColor="white"
                 gap={6}
-	@@ -101,7 +87,6 @@ function Details() {
+                cursor="pointer"
+              >
+                <Flex color="#5E5E5E" fontWeight={600} justify="space-between">
+                  <Text>{recipient.name}</Text>
+                  <Text>{Math.floor(progress)}%</Text>
+                </Flex>
                 <Flex color="#353535" mt={1}>
                   0.334 SOL
                 </Flex>
@@ -96,7 +105,12 @@ function Details() {
                 <Flex
                   color="#1935C4"
                   fontWeight={600}
-	@@ -114,38 +99,17 @@ function Details() {
+                  mt={3}
+                  justify="space-between"
+                >
+                  <Text>${recipient?.amountDonated}</Text>
+                  <Text>${recipient?.amountRequired}</Text>
+                </Flex>
                 <Progress color="#1935C4" value={Math.floor(progress)} />
               </Box>
 
@@ -135,7 +149,12 @@ function Details() {
               <Button
                 mx={8}
                 py={4}
-	@@ -158,12 +122,13 @@ function Details() {
+                bgColor="#4C3FE7"
+                color="white"
+                border="none"
+                onClick={handleDonate}
+                isDisabled={amount < 0.1 || transactionPending}
+                isLoading={transactionPending}
               >
                 Send {recipient.name} some Sol
               </Button>
@@ -148,7 +167,12 @@ function Details() {
                 onClick={() => navigate("/message")}
               >
                 <Text>Send a Message</Text>
-	@@ -176,102 +141,24 @@ function Details() {
+                <ChatIcon boxSize={6} />
+              </Flex>
+
+              <Text mx={8}>Transaction History</Text>
+              <Box>
+                <Transactions />
               </Box>
             </>
           ) : (
@@ -251,7 +275,28 @@ export function Transactions() {
       css={{
         "&::-webkit-scrollbar": {
           display: "none", // Hide scrollbar for Chrome, Safari, and Opera
-	@@ -300,6 +187,7 @@ export function Transactions() {
+        },
+        scrollbarWidth: "none", // Hide scrollbar for Firefox
+        msOverflowStyle: "none", // Hide scrollbar for Internet Explorer and Edge
+      }}
+    >
+      <Table variant="simple">
+        <TableCaption>Transaction details</TableCaption>
+        <Thead>
+          <Tr>
+            <Th>Signature</Th>
+            <Th>Date</Th>
+            <Th>Status</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {transaction?.map((val: TransactionT) => (
+            <Tr key={val.transactionNo}>
+              <Td>{val.signature.slice(0, 30)}...</Td>
+              <Td>{val.time.toISOString()}</Td>
+              <Td>{val.status}</Td>
+            </Tr>
+          ))}
         </Tbody>
       </Table>
     </TableContainer>
