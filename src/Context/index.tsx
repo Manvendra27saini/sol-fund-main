@@ -14,61 +14,69 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux/hook";
 import { addRecipient } from "../redux/slice/RecepientSlice";
 import { addCampaign, clearCampaign } from "../redux/slice/CampaignSlice";
-import { addTransaction, clearTransactions } from "../redux/slice/TransactionSlice";
+import {
+  addTransaction,
+  clearTransactions,
+} from "../redux/slice/TransactionSlice";
 
 const PROGRAM_KEY = new PublicKey(idl.metadata.address);
 
-type BioT = {
+type bioT = {
   name: string;
   description: string;
 };
 
 export const AppContext = React.createContext<{
   step: number;
-  setStep: React.Dispatch<React.SetStateAction<number>>;
-  smartContract: anchor.Program | undefined;
+  setStep: any;
+  smartContract: any;
   user: any;
-  transactionPending: boolean;
-  getUser: () => void;
-  tags: string[];
-  setTags: React.Dispatch<React.SetStateAction<string[]>>;
-  bio: BioT;
-  setBio: React.Dispatch<React.SetStateAction<BioT>>;
-  initialized: boolean;
+  transactionPending: any;
+  getUser: any;
+  tags: any;
+  setTags: any;
+  bio: bioT;
+  setBio: any;
+  initialized: any;
   amount: number;
-  setAmount: React.Dispatch<React.SetStateAction<number>>;
-  initUser: () => void;
-  getAllCampaigns: () => void;
-  getACampaign: (pub: string) => void;
-  donate: (val: number) => void;
+  setAmount: any;
+  initUser: any;
+  getAllCampaigns: any;
+  getACampaign: any;
+  donate: any;
 }>({
   step: 1,
-  setStep: () => {},
+  setStep: undefined,
   smartContract: undefined,
-  user: {},
-  transactionPending: false,
-  getUser: () => {},
-  tags: [],
-  setTags: () => {},
+  user: undefined,
+  transactionPending: undefined,
+  getUser: undefined,
+  tags: undefined,
+  setTags: undefined,
   bio: { name: "", description: "" },
-  setBio: () => {},
-  initialized: false,
+  setBio: undefined,
+  initialized: undefined,
   amount: 0,
-  setAmount: () => {},
-  initUser: () => {},
-  getAllCampaigns: () => {},
-  getACampaign: () => {},
-  donate: () => {},
+  setAmount: undefined,
+  initUser: undefined,
+  getAllCampaigns: undefined,
+  getACampaign: undefined,
+  donate: undefined,
 });
 
-export const AppProvider: React.FC = ({ children }) => {
+export const AppProvider = ({ children }: any) => {
   const [step, setStep] = React.useState<number>(1);
-  const [transactionPending, setTransactionPending] = React.useState<boolean>(false);
-  const [initialized, setInitialized] = React.useState<boolean>(false);
+  const [transactionPending, setTransactionPending] = React.useState(false);
+  const [initialized, setInitialized] = React.useState(false);
   const [tags, setTags] = React.useState<string[]>([]);
-  const [bio, setBio] = React.useState<BioT>({ name: "", description: "" });
+  const [bio, setBio] = React.useState({
+    name: "",
+    description: "",
+  });
   const [amount, setAmount] = React.useState<number>(0);
-  const [user, setUser] = React.useState<any>({
+  const anchorWallet = useAnchorWallet();
+  const { connection } = useConnection();
+  const [user, setUser] = React.useState({
     pda: "",
     name: "",
     amountDonated: 0,
@@ -76,14 +84,12 @@ export const AppProvider: React.FC = ({ children }) => {
     description: "",
     donationComplete: false,
   });
-  const anchorWallet = useAnchorWallet();
-  const { connection } = useConnection();
   const { publicKey } = useWallet();
   const navigate = useNavigate();
   const location = useLocation();
+  // console.log("publickey type", publicKey);
   const dispatch = useAppDispatch();
   const recipient = useAppSelector((state) => state.recipient);
-
   const smartContract = React.useMemo(() => {
     if (anchorWallet && publicKey) {
       const provider = new anchor.AnchorProvider(
@@ -93,9 +99,7 @@ export const AppProvider: React.FC = ({ children }) => {
       );
       return new anchor.Program(idl as any, PROGRAM_KEY, provider);
     }
-    return undefined;
-  }, [connection, anchorWallet, publicKey]);
-
+  }, [connection, anchorWallet]);
   const getUser = async () => {
     setTransactionPending(true);
     try {
@@ -110,6 +114,7 @@ export const AppProvider: React.FC = ({ children }) => {
         );
 
         if (data) {
+          // console.log("pda", CampaignPda.toString());
           setUser({
             ...user,
             pda: CampaignPda.toString(),
@@ -121,16 +126,19 @@ export const AppProvider: React.FC = ({ children }) => {
           });
         }
         setInitialized(true);
+        setTransactionPending(false);
         navigate(location.state);
+        return;
       }
     } catch (err: any) {
-      toast.error(err.message);
       if (err.message.includes("Account does not exist or has no data")) {
         toast.success("Welcome, create an Account");
         navigate("onboarding");
+        return;
       }
-    } finally {
-      setTransactionPending(false);
+      toast.success(err.message);
+
+      console.log(err.message);
     }
   };
 
@@ -144,7 +152,13 @@ export const AppProvider: React.FC = ({ children }) => {
         );
 
         await smartContract.methods
-          .create(bio.name, new anchor.BN(12), new anchor.BN(amount), tags, bio.description)
+          .create(
+            bio.name,
+            new anchor.BN(12),
+            new anchor.BN(amount),
+            tags,
+            bio.description
+          )
           .accounts({
             campaign: CampaignPda,
             user: publicKey,
@@ -154,21 +168,25 @@ export const AppProvider: React.FC = ({ children }) => {
         navigate("/profile");
       }
     } catch (err: any) {
-      toast.error(err.message);
+      toast.success(err.message);
+
+      console.log(err);
     } finally {
       setTransactionPending(false);
     }
   };
 
   const getAllCampaigns = async () => {
-    setTransactionPending(true);
     try {
       if (smartContract && publicKey) {
+        setTransactionPending(true);
+        // campaigns.length = 0;
         const data = await smartContract.account.campaign.all();
+        // campaigns.map((d) => d.pop());
         if (data) {
           dispatch(clearCampaign());
           data.forEach((d: any) => {
-            dispatch(addCampaign({
+            var res = {
               pubKey: d.publicKey.toString(),
               name: d.account.name,
               amountDonated: d.account.amountDonated.toNumber(),
@@ -176,12 +194,15 @@ export const AppProvider: React.FC = ({ children }) => {
               description: d.account.description,
               donationComplete: d.account.donationComplete,
               id: d.account.id,
-            }));
+            };
+            dispatch(addCampaign(res));
           });
+          return;
         }
       }
     } catch (err: any) {
-      toast.error(err.message);
+      toast.success(err.message);
+      console.log(err);
     } finally {
       setTransactionPending(false);
     }
@@ -192,29 +213,42 @@ export const AppProvider: React.FC = ({ children }) => {
       if (smartContract && publicKey) {
         const val: any = await smartContract.account.campaign.all();
         if (val) {
-          const campaign = val.find((d: any) => d.publicKey.toString() === pub);
-          if (campaign) {
-            dispatch(addRecipient({
-              publicKey: campaign.publicKey,
-              name: campaign.account.name,
-              description: campaign.account.description,
-              amountDonated: campaign.account.amountDonated.toNumber(),
-              amountRequired: campaign.account.amountRequired.toNumber(),
-              donationComplete: campaign.account.donationComplete,
-            }));
+          console.log(val);
+          // const val: any = campaign.find((d) => {
+          //   return d.publicKey.toString() === pub;
+          // });
+          // campaign.map((val: any) => {
+          for (let i = 0; i < val.length; i++) {
+            console.log(val[i], val[i].publicKey.toString(), pub.toString());
+            if (val[i].publicKey.toString() === pub.toString()) {
+              // console.log(val[i]);
+              dispatch(
+                addRecipient({
+                  publicKey: val[i].publicKey,
+                  name: val[i].account.name,
+                  description: val[i].account.description,
+                  amountDonated: val[i].account.amountDonated.toNumber(),
+                  amountRequired: val[i].account.amountRequired.toNumber(),
+                  donationComplete: val[i].account.donationComplete,
+                  // donationComplete: false,
+                })
+              );
+            }
           }
+          // });
         }
       }
     } catch (err: any) {
-      toast.error(err.message);
+      toast.success(err.message);
+      console.log(err);
     } finally {
       setTransactionPending(false);
     }
   };
 
   const donate = async (val: number) => {
-    setTransactionPending(true);
     try {
+      setTransactionPending(true);
       if (smartContract && publicKey && recipient.publicKey) {
         const [CampaignPda] = findProgramAddressSync(
           [utf8.encode("COMPAIGN_DEMO"), recipient.publicKey.toBuffer()],
@@ -231,9 +265,11 @@ export const AppProvider: React.FC = ({ children }) => {
           .rpc();
 
         toast.success("You have successfully donated");
+        // window.reload()
       }
     } catch (err: any) {
-      toast.error(err.message);
+      toast.success(err.message);
+      console.log(err);
     } finally {
       setTransactionPending(false);
     }
@@ -244,30 +280,44 @@ export const AppProvider: React.FC = ({ children }) => {
       "https://virulent-ultra-replica.solana-devnet.quiknode.pro/8d0f174b8b11b55aee43b27a6f913fff39963312/";
     const solanaConnection = new Connection(endpoint);
 
-    const program = new anchor.Program(idl as any, PROGRAM_KEY);
-    const transactionSignature = await solanaConnection.getConfirmedSignaturesForAddress2(publicKey);
-    if (transactionSignature) {
+    if (smartContract && publicKey) {
+      let transactionList = await solanaConnection?.getSignaturesForAddress(
+        publicKey,
+        { limit: 5 }
+      );
       dispatch(clearTransactions());
-      transactionSignature.forEach((transaction) => {
-        dispatch(addTransaction(transaction.signature));
+      transactionList.forEach((transaction: any, i: number) => {
+        const date = new Date(transaction.blockTime * 1000);
+        dispatch(
+          addTransaction({
+            transactionNo: i + 1,
+            time: date,
+            signature: transaction.signature,
+            status: transaction.confirmationStatus,
+          })
+        );
+        // console.log(`Transaction No: ${i + 1}`);
+        // console.log(`Signature: ${transaction.signature}`);
+        // console.log(`Time: ${date}`);
+        // console.log(`Status: ${transaction.confirmationStatus}`);
+        // console.log("-".repeat(20));
+        // console.log(transaction);
       });
     }
   };
-
   React.useEffect(() => {
-    if (anchorWallet && publicKey) {
-      getUser();
-    }
-  }, [anchorWallet, publicKey]);
+    getUser();
+    getTransactions();
+  }, [publicKey]);
 
   return (
     <AppContext.Provider
       value={{
+        user,
+        transactionPending,
         step,
         setStep,
         smartContract,
-        user,
-        transactionPending,
         getUser,
         tags,
         setTags,
@@ -286,3 +336,5 @@ export const AppProvider: React.FC = ({ children }) => {
     </AppContext.Provider>
   );
 };
+
+export default AppProvider;
