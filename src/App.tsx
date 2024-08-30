@@ -43,7 +43,6 @@ const App = () => {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="connect-wallet" element={<ConnectWallet />} />
-        <Route path="onboarding" element={<Onboarding1 />} />
         <Route path="profile" element={<Profile />} />
         <Route path="campaign" element={<Campaign />} />
         <Route path="details/:id" element={<Details />} />
