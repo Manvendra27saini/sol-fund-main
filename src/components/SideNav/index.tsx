@@ -4,7 +4,6 @@ import { Box, Flex, Text, Hide, Image } from "@chakra-ui/react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { TbWorld } from "react-icons/tb";
 import { GoPeople } from "react-icons/go";
-import { BsRepeat } from "react-icons/bs";
 import { FiHome } from "react-icons/fi";
 import { Avatar } from "@chakra-ui/react";
 import { useAppSelector } from "../../redux/hook";
@@ -108,26 +107,6 @@ function Index({ children }: any) {
           >
             <TbWorld />
             <Text>Campaign</Text>
-          </Flex>
-          <Flex
-            fontWeight={600}
-            color="black"
-            justify="center"
-            align="center"
-            gap={1}
-            cursor="pointer"
-            borderRadius="md"
-            py={3}
-            px={3}
-            transition="background-color 0.2s ease, transform 0.2s ease"
-            _hover={{
-              bg: "purple.600",
-              transform: "scale(1.05)",
-            }}
-            _focus={{ boxShadow: "outline" }}
-          >
-            <BsRepeat color="black" />
-            <Text>Swap</Text>
           </Flex>
         </Box>
       </Hide>
